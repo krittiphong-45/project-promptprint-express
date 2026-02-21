@@ -69,7 +69,7 @@ router.post("/generate-design", async (req, res) => {
     const seed = Math.floor(Math.random() * 1000000);
     const encodedPrompt = encodeURIComponent(enhancedPrompt);
     const selectedModel = Math.random() > 0.5 ? 'flux' : 'turbo';
-    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&${selectedModel}`;
+    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=turbo`;
 
     console.log("✅ Generated Pollinations URL:", pollinationsUrl);
 
