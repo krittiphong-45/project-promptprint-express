@@ -8,12 +8,18 @@ const User = require("../models/User");
 router.post("/register", async (req, res) => {
   try {
     const { username, password, email } = req.body;
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({
+      $or: [{ username: username.trim() }, { email: email.trim().toLowerCase() }]
+    });
     if (existingUser) {
       return res.status(400).json({ error: "Username already exists" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = new User({ username, password: hashedPassword, email });
+    const user = new User({
+      username: username.trim(),
+      password: hashedPassword,
+      email: email.trim().toLowerCase() // เก็บเป็นตัวเล็กเสมอ
+    });
     await user.save();
     res.status(201).json({ message: "User created successfully" });
   } catch (error) {
@@ -27,7 +33,7 @@ router.post("/login", async (req, res) => {
     const { username, email, password } = req.body;
 
     // Check if identifier is provided (can be username or email)
-    const identifier =(username || email || "").trim();
+    const identifier = (username || email || "").trim();
 
     if (!identifier) {
       return res.status(400).json({ error: "Username or Email is required" });
