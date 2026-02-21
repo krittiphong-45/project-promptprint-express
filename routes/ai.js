@@ -42,9 +42,8 @@ router.post("/generate-design", async (req, res) => {
               {
                 parts: [
                   {
-                    text: `As an AI art prompt generator, please rewrite the following description into a detailed, creative, and high-quality image generation prompt in English, suitable for a T-shirt design. Focus on visual details, style, and mood. Keep it under 50 words. The description is: "${prompt}". The desired art style is: "${
-                      style || "Realistic"
-                    }". ${bgInstruction} Force the prompt to start with "A sticker of..." or "A vector design of..." if background removal is requested.`,
+                    text: `As an AI art prompt generator, please rewrite the following description into a detailed, creative, and high-quality image generation prompt in English, suitable for a T-shirt design. Focus on visual details, style, and mood. Keep it under 50 words. The description is: "${prompt}". The desired art style is: "${style || "Realistic"
+                      }". ${bgInstruction} Force the prompt to start with "A sticker of..." or "A vector design of..." if background removal is requested.`,
                   },
                 ],
               },
@@ -69,16 +68,28 @@ router.post("/generate-design", async (req, res) => {
     // 2. Generate Image URL using Pollinations.ai
     const seed = Math.floor(Math.random() * 1000000);
     const encodedPrompt = encodeURIComponent(enhancedPrompt);
-    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
+    const selectedModel = Math.random() > 0.5 ? 'flux' : 'turbo';
+    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&${selectedModel}`;
 
     console.log("✅ Generated Pollinations URL:", pollinationsUrl);
 
     // 3. Upload to Cloudinary
     console.log("☁️ Uploading to Cloudinary...");
-    const uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
-      folder: "promptprint-designs",
-      format: "webp",
-    });
+    let uploadResult;
+    try {
+      // ลองดึงข้อมูลภาพดูก่อนว่าปลายทางล่มไหม
+      uploadResult = await cloudinary.uploader.upload(pollinationsUrl, {
+        folder: "promptprint-designs",
+        format: "webp",
+        timeout: 60000 // เพิ่ม Timeout เป็น 60 วินาที
+      });
+    } catch (uploadError) {
+      console.error("❌ Cloudinary Upload Failed:", uploadError.message);
+      return res.status(503).json({
+        error: "Image Generator is currently overloaded",
+        details: "The external AI service is temporarily unavailable. Please try again in a moment."
+      });
+    }
 
     // 4. Save to MongoDB
     const { userId } = req.body;
