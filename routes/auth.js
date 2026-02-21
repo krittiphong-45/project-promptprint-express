@@ -27,7 +27,7 @@ router.post("/login", async (req, res) => {
     const { username, email, password } = req.body;
 
     // Check if identifier is provided (can be username or email)
-    const identifier = username || email;
+    const identifier =(username || email || "").trim();
 
     if (!identifier) {
       return res.status(400).json({ error: "Username or Email is required" });
@@ -35,7 +35,7 @@ router.post("/login", async (req, res) => {
 
     // Find user by either username or email
     const user = await User.findOne({
-      $or: [{ username: identifier }, { email: identifier }],
+      $or: [{ username: identifier }, { email: identifier.toLowerCase() }],
     });
 
     if (!user) return res.status(400).json({ error: "User not found" });
